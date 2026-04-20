@@ -9,7 +9,7 @@
   </head>
   <body>
     <div id="unity-container">
-      <canvas id="unity-canvas" tabindex="-1"></canvas>
+      <canvas id="unity-canvas" width="960" height="600" tabindex="-1"></canvas>
       <div id="unity-loading-bar">
         <div id="unity-loading-content">
           <h1 id="unity-title">Welcome to Auto Vista Showroom</h1>
@@ -84,37 +84,26 @@
         document.getElementsByTagName('head')[0].appendChild(meta);
       }
 
-      loadingBar.style.display = "block";
-
       var script = document.createElement("script");
       script.src = loaderUrl;
       script.onload = async () => {
         try {
-          console.log("Loading chunks...");
           config.dataUrl = await loadChunkedData(config.dataUrl, 6);
-          console.log("Chunks loaded, Blob URL:", config.dataUrl);
           
-          // Ensure canvas has dimensions before starting
-          canvas.width = window.innerWidth;
-          canvas.height = window.innerHeight;
-
           createUnityInstance(canvas, config, (progress) => {
             var percent = Math.round(50 + 50 * progress);
             progressBarFull.style.width = percent + "%";
             progressText.innerHTML = percent + "%";
             if (progress === 1) {
-              progressText.innerHTML = "Finalizing...";
+              progressText.innerHTML = "Preparing Showroom...";
             }
           }).then((unityInstance) => {
-            console.log("Unity instance created successfully.");
             loadingBar.style.display = "none";
           }).catch((message) => {
-            console.error("Unity initialization failed:", message);
-            alert("Unity Error: " + message);
+            alert(message);
           });
         } catch (err) {
-          console.error("Chunk loading error:", err);
-          alert("Loading Error: " + err.message);
+          alert(err);
         }
       };
 
