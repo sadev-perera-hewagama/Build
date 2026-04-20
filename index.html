@@ -69,21 +69,20 @@
         showBanner: unityShowBanner,
       };
 
-      // By default, Unity keeps WebGL canvas render target size matched with
-      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
-      // Set this to false if you want to decouple this synchronization from
-      // happening inside the engine, and you would instead like to size up
-      // the canvas DOM size and WebGL render target sizes yourself.
-      // config.matchWebGLToCanvasSize = false;
-
-      // If you would like all file writes inside Unity Application.persistentDataPath
-      // directory to automatically persist so that the contents are remembered when
-      // the user revisits the site the next time, uncomment the following line:
-      // config.autoSyncPersistentDataPath = true;
-      // This autosyncing is currently not the default behavior to avoid regressing
-      // existing user projects that might rely on the earlier manual
-      // JS_FileSystem_Sync() behavior, but in future Unity version, this will be
-      // expected to change.
+      // --- CHUNKED LOADING LOGIC START ---
+      async function loadChunkedData(baseUrl, numChunks) {
+        const chunks = [];
+        for (let i = 1; i <= numChunks; i++) {
+          const response = await fetch(`${baseUrl}.part${i}`);
+          if (!response.ok) throw new Error(`Failed to load chunk ${i}`);
+          chunks.push(await response.arrayBuffer());
+          // Optional: Update progress bar here if needed
+          progressBarFull.style.width = (i / numChunks * 50) + "%"; 
+        }
+        const blob = new Blob(chunks, { type: 'application/octet-stream' });
+        return URL.createObjectURL(blob);
+      }
+      // --- CHUNKED LOADING LOGIC END ---
 
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
         // Mobile device style: fill the whole browser client area with the game canvas:
@@ -111,18 +110,26 @@
 
       var script = document.createElement("script");
       script.src = loaderUrl;
-      script.onload = () => {
-        createUnityInstance(canvas, config, (progress) => {
-          progressBarFull.style.width = 100 * progress + "%";
-              }).then((unityInstance) => {
-                loadingBar.style.display = "none";
-                fullscreenButton.onclick = () => {
-                  unityInstance.SetFullscreen(1);
-                };
-              }).catch((message) => {
-                alert(message);
-              });
+      script.onload = async () => {
+        try {
+          // Load data in chunks first
+          config.dataUrl = await loadChunkedData(config.dataUrl, 6);
+          
+          createUnityInstance(canvas, config, (progress) => {
+            // Adjust progress bar to start from 50% since chunks took first 50%
+            progressBarFull.style.width = (50 + 50 * progress) + "%";
+          }).then((unityInstance) => {
+            loadingBar.style.display = "none";
+            fullscreenButton.onclick = () => {
+              unityInstance.SetFullscreen(1);
             };
+          }).catch((message) => {
+            alert(message);
+          });
+        } catch (err) {
+          alert(err);
+        }
+      };
 
       document.body.appendChild(script);
 
