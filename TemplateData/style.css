@@ -42,6 +42,14 @@ html, body {
     background: url('progress-bar-full-dark.png') no-repeat center; 
 }
 
+#unity-progress-text {
+    color: white;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin-top: 5px;
+    font-size: 14px;
+}
+
 #unity-warning { 
     position: absolute; 
     left: 50%; 
