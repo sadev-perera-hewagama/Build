@@ -90,19 +90,31 @@
       script.src = loaderUrl;
       script.onload = async () => {
         try {
+          console.log("Loading chunks...");
           config.dataUrl = await loadChunkedData(config.dataUrl, 6);
+          console.log("Chunks loaded, Blob URL:", config.dataUrl);
           
+          // Ensure canvas has dimensions before starting
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+
           createUnityInstance(canvas, config, (progress) => {
             var percent = Math.round(50 + 50 * progress);
             progressBarFull.style.width = percent + "%";
             progressText.innerHTML = percent + "%";
+            if (progress === 1) {
+              progressText.innerHTML = "Finalizing...";
+            }
           }).then((unityInstance) => {
+            console.log("Unity instance created successfully.");
             loadingBar.style.display = "none";
           }).catch((message) => {
-            alert(message);
+            console.error("Unity initialization failed:", message);
+            alert("Unity Error: " + message);
           });
         } catch (err) {
-          alert(err);
+          console.error("Chunk loading error:", err);
+          alert("Loading Error: " + err.message);
         }
       };
 
